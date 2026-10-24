@@ -2,7 +2,11 @@
 
 [Windows-Downloads](https://github.com/Deansgate/geilopack/releases) · [Buildstatus](https://github.com/Deansgate/geilopack/actions)
 
-Lokale Windows-11-DAW in schrittweiser Entwicklung. **Version 0.2 ergänzt echte
+Lokale Windows-11-DAW in schrittweiser Entwicklung.
+
+**0.2.1 behebt das HTDemucs-Modellladen in der Windows-EXE.**
+[Details und Aktualisierung](docs/FEHLERBEHEBUNG-0.2.1.md).
+ **Version 0.2 ergänzt echte
 CPU-Gesangstrennung mit Demucs HTDemucs**, Modell-Einrichtung und Prozessabbruch.
 
 Implementiert: WAV/MP3-Import, Mehrspur-Wellenformen, synchrones Playback,
@@ -61,5 +65,5 @@ Windows-Build: `packaging/build-windows.ps1` erzeugt mit PyInstaller und Inno
 Setup einen Installer, der kein installiertes Python voraussetzt.
 Die Windows-Entwicklungsfassung wurde inzwischen auf GitHub Actions gebaut und
 mit einem automatischen EXE-Starttest geprüft.
-[Setup.exe herunterladen](https://github.com/Deansgate/geilopack/releases/download/v0.2.0-dev.2.1/Setup.exe).
+[Setup.exe herunterladen](https://github.com/Deansgate/geilopack/releases/download/v0.2.1-dev.4.1/Setup.exe).
 Physische Audiohardware und Aufnahme-Latenz sind weiterhin nicht abgenommen.
