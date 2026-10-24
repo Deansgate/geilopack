@@ -1,6 +1,21 @@
 # Prüfstand – 24. Oktober 2026
 
-## Version 0.2
+## Windows-Build Version 0.2
+
+Am 24.10.2026 lief der Windows-2022-x64-Build erfolgreich durch:
+27 Tests bestanden, ein modellabhängiger Test übersprungen.
+Zusätzlich startete die tatsächlich gebaute Klangwerk.exe erfolgreich ohne
+separate Python-Installation. Geprüft wurden Qt-Timeline, Audioimport,
+WAV-Export, PortAudio-Import und CPU-PyTorch-/Demucs-Import.
+Der Installer mit SHA-256-Prüfsumme ist als Entwicklungsfassung veröffentlicht:
+https://github.com/Deansgate/geilopack/releases/tag/v0.2.0-dev.2.1
+
+Ein Windows-spezifischer Fehler beim Freigeben temporärer Memmaps nach
+Importabbruch wurde dabei gefunden und behoben. Neue Regression prüft den
+Abbruch nach bereits geschriebenen Audiodaten. Physische Mikrofon-/Ausgabetests
+und vollständige Installer-Abnahme auf Zielhardware bleiben offen.
+
+## Vorheriger Linux-Prüfstand Version 0.2
 
 **26 Standardtests bestanden**, ein modellabhängiger Test dort übersprungen.
 Der zusätzliche Test mit echtem HTDemucs-Modell wurde anschließend aktiviert und
