@@ -64,6 +64,7 @@ class Assets:
     def import_file(self, path: str, cancel: Event, progress=lambda x: None) -> str:
         asset_id = uid()
         target = self.directory / f"{asset_id}.npy"
+        out = None
         try:
             with sf.SoundFile(path) as source:
                 if source.channels > 2:
@@ -97,14 +98,16 @@ class Assets:
                     out[dest_start:dest_end] = audio[trim:trim + dest_end - dest_start]
                     progress(int(end / source.frames * 100))
                 out.flush()
-                del out
+                out._mmap.close()
+                out = None
             if cancel.is_set():
                 raise Cancelled()
             return self.register(target, asset_id, cancel)
         except BaseException:
             # Memmap vor dem Löschen freigeben (Windows-Dateisperre).
-            if "out" in locals():
-                del out
+            if out is not None:
+                out._mmap.close()
+                out = None
             target.unlink(missing_ok=True)
             raise
 

@@ -81,6 +81,18 @@ def test_cancel_import_removes_partial_file(tmp_path):
     assert not list(assets.directory.glob("*.npy"))
 
 
+def test_cancel_import_after_writing_releases_mapping(tmp_path):
+    path = tmp_path / "audio.wav"
+    sf.write(path, np.ones(300000) * .1, RATE)
+    before = path.read_bytes()
+    assets = Assets(tmp_path / "cache")
+    event = Event()
+    with pytest.raises(Cancelled):
+        assets.import_file(str(path), event, lambda p: event.set())
+    assert not list(assets.directory.glob("*.npy"))
+    assert path.read_bytes() == before
+
+
 def test_portable_project_and_atomic_backup(audio, tmp_path):
     assets, key, _ = audio
     project = Project(tracks=[Track("Take", [Clip(key, 10, 20, 10000)], reference=True)])

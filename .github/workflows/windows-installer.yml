@@ -58,6 +58,25 @@ jobs:
           Physische Audiohardware und Aufnahme-Latenz sind noch nicht abgenommen.
           "@ | Set-Content -Encoding utf8 dist/installer/LIESMICH.txt
 
+      - name: Gebaute EXE ohne Python-Umgebung starten und prüfen
+        shell: pwsh
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          $report = Join-Path $PWD "dist/installer/Starttest.json"
+          $exe = Join-Path $PWD "dist/Klangwerk/Klangwerk.exe"
+          $process = Start-Process -FilePath $exe -ArgumentList @('--smoke-test', $report) -PassThru
+          if (-not $process.WaitForExit(120000)) {
+            $process.Kill()
+            throw "Die EXE hat den Starttest nicht innerhalb von zwei Minuten beendet."
+          }
+          if (-not (Test-Path $report)) { throw "Die EXE hat keinen Starttestbericht erzeugt." }
+          $result = Get-Content $report -Raw | ConvertFrom-Json
+          if ($process.ExitCode -ne 0 -or -not $result.ok) {
+            Get-Content $report
+            throw "Der Starttest der gebauten EXE ist fehlgeschlagen."
+          }
+
       - name: Setup.exe zum Download bereitstellen
         uses: actions/upload-artifact@v4
         with:
@@ -66,5 +85,6 @@ jobs:
             dist/installer/Setup.exe
             dist/installer/Setup.exe.sha256
             dist/installer/LIESMICH.txt
+            dist/installer/Starttest.json
           if-no-files-found: error
           retention-days: 14
