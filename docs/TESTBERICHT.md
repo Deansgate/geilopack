@@ -1,5 +1,24 @@
 # Prüfstand – 24. Oktober 2026
 
+## Version 0.2.1 – NumPy-/HTDemucs-Regression
+
+**32 Tests unter Windows bestanden, keine Modelltests übersprungen.**
+Build: https://github.com/Deansgate/geilopack/actions/runs/40132943494
+
+Zusätzlich erfolgreich: EXE-Starttest, Ausführen des Installers, Erhalt einer
+bestehenden Datei im Nutzerdatenordner sowie echtes HTDemucs-Modellladen und
+CPU-Inferenz in der installierten EXE. Netzwerkverbindungs- und Downloadaufrufe
+waren während des EXE-Modelltests gesperrt. Modell-Laden erfolgte mit
+weights_only=True nach SHA-256-Prüfung. Ergebnisse: zwei endliche Stereo-WAVs,
+48.000 Frames bei 48 kHz. Die gemessenen Bibliotheksversionen stehen im
+beigefügten Modelltest.json; physische Audiogeräte sind weiterhin nicht abgenommen.
+
+Neue Regressionen: Legacy-NumPy-Scalar, scoped Safe-Globals, Hash-Ablehnung vor
+Deserialisierung, Zurückweisung unbekannter Pickle-Globals und CPU-Modellladen
+mit Kontrolle der torch.load-Argumente. Projektmodell/-verwaltung, AppId,
+Installations- und Nutzerdatenpfade wurden mit dem vorherigen Release verglichen
+und bleiben unverändert. Details: [Fehlerbehebung 0.2.1](FEHLERBEHEBUNG-0.2.1.md).
+
 ## Windows-Build Version 0.2
 
 Am 24.10.2026 lief der Windows-2022-x64-Build erfolgreich durch:
