@@ -58,5 +58,8 @@ Benutzer benötigt dafür keine Kommandozeile. Die Modelle kommen über den Dial
 
 
 Windows-Build: `packaging/build-windows.ps1` erzeugt mit PyInstaller und Inno
-Setup einen Installer, der kein installiertes Python voraussetzt. Ein getestetes
-Setup.exe liegt aus dieser Linux-Umgebung noch nicht vor.
+Setup einen Installer, der kein installiertes Python voraussetzt.
+Die Windows-Entwicklungsfassung wurde inzwischen auf GitHub Actions gebaut und
+mit einem automatischen EXE-Starttest geprüft.
+[Setup.exe herunterladen](https://github.com/Deansgate/geilopack/releases/download/v0.2.0-dev.2.1/Setup.exe).
+Physische Audiohardware und Aufnahme-Latenz sind weiterhin nicht abgenommen.
