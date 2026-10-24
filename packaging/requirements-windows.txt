@@ -1,0 +1,23 @@
+# Python 3.12 x64; direkte und transitive Windows-Build-Abhängigkeiten festgelegt.
+setuptools==75.8.2
+wheel==0.45.1
+numpy==2.2.4
+scipy==1.15.2
+soundfile==0.13.1
+sounddevice==0.5.1
+cffi==1.17.1
+pycparser==2.22
+PySide6==6.8.3
+PySide6-Addons==6.8.3
+PySide6-Essentials==6.8.3
+shiboken6==6.8.3
+pytest==8.3.5
+iniconfig==2.0.0
+packaging==24.2
+pluggy==1.5.0
+colorama==0.4.6
+pyinstaller==6.12.0
+pyinstaller-hooks-contrib==2025.1
+altgraph==0.17.4
+pefile==2023.2.7
+pywin32-ctypes==0.2.3

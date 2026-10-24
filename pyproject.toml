@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "klangwerk-local"
+version = "0.2.0"
+description = "Lokales Mehrspur-Studio – erste funktionsfähige Entwicklungsstufe"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+  "numpy==2.2.4", "scipy==1.15.2", "soundfile==0.13.1",
+  "sounddevice==0.5.1", "PySide6==6.8.3",
+]
+
+[project.optional-dependencies]
+dev = ["pytest==8.3.5", "pyinstaller==6.12.0"]
+ai = ["demucs==4.0.1", "torch==2.6.0", "torchaudio==2.6.0"]
+
+[project.scripts]
+klangwerk = "klangwerk.app:main"
+
+[tool.setuptools.packages.find]
+include = ["klangwerk*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

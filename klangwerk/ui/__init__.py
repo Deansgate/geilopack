@@ -1,0 +1,1 @@
+"""Deutsche Qt-Oberfläche."""
