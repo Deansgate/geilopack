@@ -9,7 +9,7 @@ import numpy as np
 import soundfile as sf
 from scipy.signal import resample_poly
 
-from klangwerk.ai.models import verify_model
+from klangwerk.ai.loading import load_htdemucs
 from klangwerk.model import RATE
 from klangwerk.project import atomic_json
 
@@ -31,23 +31,15 @@ def overlap_weight(length, rate=RATE):
 
 def run(config):
     import torch
-    from demucs.states import load_model
     from demucs.apply import apply_model
 
     root = Path(config["output"])
     status = root / "status.json"
     atomic_json(status, {"progress": 0, "stage": "Modell wird geladen"})
     model_path = Path(config["model"])
-    if not verify_model(model_path):
-        raise ValueError("Das lokale Modell fehlt oder seine Prüfsumme stimmt nicht.")
     torch.set_num_threads(max(1, min(8, (os.cpu_count() or 2) // 2)))
     torch.manual_seed(0)
-    # Demucs-Checkpoints enthalten eine Python-Modellklasse. Nur die oben
-    # vollständig hashgeprüfte, festgelegte Datei wird mit Pickle geladen.
-    model = load_model(torch.load(model_path, map_location="cpu", weights_only=False))
-    model.eval()
-    if model.samplerate != 44100 or model.audio_channels != 2:
-        raise ValueError("Unerwartete Modellparameter.")
+    model = load_htdemucs(model_path)
     vocal_index = model.sources.index("vocals")
     other_indices = [i for i in range(len(model.sources)) if i != vocal_index]
     audio = np.load(config["source"], mmap_mode="r", allow_pickle=False)

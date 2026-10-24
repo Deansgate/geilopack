@@ -21,6 +21,8 @@ Assert-Exit "Demucs-Abhängigkeiten"
 & $Python -m pip install --no-deps --no-build-isolation -e .
 Assert-Exit "Klangwerk installieren"
 $env:QT_QPA_PLATFORM = "offscreen"
+$env:KLANGWERK_TEST_MODEL = & $Python -c "from pathlib import Path; from threading import Event; from klangwerk.ai.models import download_model; print(download_model(Path('.build-models').resolve(), Event()))"
+Assert-Exit "Geprüftes HTDemucs-Testmodell"
 & $Python -m pytest -q
 Assert-Exit "Tests"
 Remove-Item Env:QT_QPA_PLATFORM
@@ -34,6 +36,7 @@ if (-not (Test-Path $QtTranslation)) { throw "Die deutsche Qt-Übersetzung fehlt
     --collect-all demucs --collect-all torch --collect-all torchaudio `
     --collect-all dora --collect-all julius --collect-all openunmix `
     --hidden-import klangwerk.ai.worker --hidden-import demucs.htdemucs `
+    --hidden-import numpy.core.multiarray --hidden-import numpy._core.multiarray `
     --add-data "LICENSE;." --add-data "THIRD_PARTY.md;." `
     --add-data "$QtTranslation;PySide6/translations" `
     --add-data "build/licenses;licenses" packaging/entry.py

@@ -6,6 +6,9 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 
 
 def main():
+    if len(sys.argv) == 4 and sys.argv[1] == "--model-test":
+        from klangwerk.diagnostics import model_test
+        return model_test(sys.argv[2], sys.argv[3])
     if len(sys.argv) == 3 and sys.argv[1] == "--smoke-test":
         from klangwerk.diagnostics import smoke_test
         return smoke_test(sys.argv[2])

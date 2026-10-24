@@ -52,7 +52,7 @@ jobs:
           $hash = (Get-FileHash $setup -Algorithm SHA256).Hash.ToLowerInvariant()
           "$hash  Setup.exe" | Set-Content -Encoding ascii dist/installer/Setup.exe.sha256
           @"
-          Klangwerk 0.2 – Entwicklungsfassung für Windows 11 x64
+          Klangwerk 0.2.1 – korrigierte Entwicklungsfassung für Windows 11 x64
           Setup.exe starten. Python wird mitgeliefert.
           Die Einrichtung des KI-Modells erfolgt anschließend in der Anwendung.
           Physische Audiohardware und Aufnahme-Latenz sind noch nicht abgenommen.
@@ -77,6 +77,35 @@ jobs:
             throw "Der Starttest der gebauten EXE ist fehlgeschlagen."
           }
 
+      - name: Installer ausführen und echtes Modell in installierter EXE offline prüfen
+        shell: pwsh
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $install = Join-Path $env:RUNNER_TEMP 'Klangwerk-Installation'
+          $data = Join-Path $env:LOCALAPPDATA 'KlangwerkLocal/Klangwerk'
+          New-Item -ItemType Directory -Force $data | Out-Null
+          $sentinel = Join-Path $data 'upgrade-preservation.txt'
+          'Vorhandene Nutzerdaten muessen erhalten bleiben.' | Set-Content $sentinel
+          $before = (Get-FileHash $sentinel).Hash
+          $setup = Join-Path $PWD 'dist/installer/Setup.exe'
+          $installer = Start-Process -FilePath $setup -ArgumentList @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', "/DIR=$install") -PassThru
+          if (-not $installer.WaitForExit(180000)) { $installer.Kill(); throw 'Installer-Timeout.' }
+          if ($installer.ExitCode -ne 0) { throw 'Installer fehlgeschlagen.' }
+          if ((Get-FileHash $sentinel).Hash -ne $before) { throw 'Nutzerdaten wurden verändert.' }
+          $model = Join-Path $PWD '.build-models/955717e8-8726e21a.th'
+          $report = Join-Path $PWD 'dist/installer/Modelltest.json'
+          $exe = Join-Path $install 'Klangwerk.exe'
+          $process = Start-Process -FilePath $exe -ArgumentList @('--model-test', $model, $report) -PassThru
+          if (-not $process.WaitForExit(300000)) { $process.Kill(); throw 'Modelltest-Timeout.' }
+          if (-not (Test-Path $report)) { throw 'Kein Modelltestbericht erzeugt.' }
+          $result = Get-Content $report -Raw | ConvertFrom-Json
+          if ($process.ExitCode -ne 0 -or -not $result.ok -or -not $result.weights_only -or -not $result.network_connect_forbidden) {
+            Get-Content $report
+            throw 'Echtes Modell konnte in der installierten EXE nicht sicher offline verarbeitet werden.'
+          }
+
       - name: Setup.exe zum Download bereitstellen
         uses: actions/upload-artifact@v4
         with:
@@ -86,5 +115,6 @@ jobs:
             dist/installer/Setup.exe.sha256
             dist/installer/LIESMICH.txt
             dist/installer/Starttest.json
+            dist/installer/Modelltest.json
           if-no-files-found: error
           retention-days: 14

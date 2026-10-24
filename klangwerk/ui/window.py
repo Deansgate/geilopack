@@ -37,7 +37,7 @@ class Window(QMainWindow):
         self.clipboard = None
         self._take_start = 0
         self._rebuild = False
-        self.setWindowTitle("Klangwerk · Lokales Musikstudio 0.2")
+        self.setWindowTitle("Klangwerk · Lokales Musikstudio 0.2.1")
         self.resize(1280, 850)
         self._build()
         self._menus()
@@ -211,7 +211,7 @@ class Window(QMainWindow):
         self.mixer.setColumnWidth(2, 150)
         self.master.setValue(round(self.project.master * 100))
         self._rebuild = False
-        self.setWindowTitle(f"{'* ' if self.dirty else ''}{self.project.name} · Klangwerk 0.2")
+        self.setWindowTitle(f"{'* ' if self.dirty else ''}{self.project.name} · Klangwerk 0.2.1")
 
     def set_track(self, track, field, value, slider):
         self.checkpoint()
@@ -612,7 +612,7 @@ class Window(QMainWindow):
                      lambda gain: self.statusBar().showMessage(f"Export fertig. Pegel zur Clipping-Vermeidung: {gain * 100:.1f}%. Referenzspuren ausgeschlossen."))
 
     def help(self):
-        QMessageBox.information(self, "Bedienung / Version 0.2", "Audio importieren → Mikrofon/Ausgabe wählen → Kopfhörer aufsetzen → Aufnahme.\n"
+        QMessageBox.information(self, "Bedienung / Version 0.2.1", "Audio importieren → Mikrofon/Ausgabe wählen → Kopfhörer aufsetzen → Aufnahme.\n"
             "Stoppen sichert jeden Take auf einer neuen Spur. Kein Mikrofon-Monitoring.\n\n"
             "Lineal anklicken: Position · Clip ziehen: verschieben · S: teilen\n"
             "Strg+C / Strg+V: Clip kopieren/einfügen · Entf: Clip löschen\n"

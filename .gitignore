@@ -9,3 +9,4 @@ dist/
 .build-venv/
 .models/
 .ai-smoke/
+.build-models/

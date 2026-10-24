@@ -16,13 +16,24 @@ def verify_model(path, cancel=None):
     path = Path(path)
     if not path.is_file() or path.stat().st_size != MODEL_SIZE:
         return False
-    digest = hashlib.sha256()
     with path.open("rb") as source:
-        while block := source.read(1024 * 1024):
-            if cancel is not None and cancel.is_set():
-                raise Cancelled()
-            digest.update(block)
-    return digest.hexdigest() == MODEL_SHA256
+        return verify_model_stream(source, cancel)
+
+
+def verify_model_stream(source, cancel=None):
+    """Hashprüfung und Deserialisierung können denselben offenen Handle verwenden."""
+    source.seek(0)
+    digest = hashlib.sha256()
+    length = 0
+    while block := source.read(1024 * 1024):
+        if cancel is not None and cancel.is_set():
+            raise Cancelled()
+        length += len(block)
+        if length > MODEL_SIZE:
+            return False
+        digest.update(block)
+    source.seek(0)
+    return length == MODEL_SIZE and digest.hexdigest() == MODEL_SHA256
 
 
 def download_model(directory, cancel, progress=lambda p: None):
