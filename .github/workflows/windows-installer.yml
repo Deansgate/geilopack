@@ -11,7 +11,9 @@ permissions:
 jobs:
   setup:
     name: Setup.exe bauen
-    runs-on: windows-2022
+    # Server 2025 hat Build 26100 und erfüllt die Win11-Mindestbuildnummer des
+    # Installers. Server 2022 (20348) kann bauen, aber diesen Installer nicht testen.
+    runs-on: windows-2025
     timeout-minutes: 60
     env:
       PYTHONUTF8: '1'
