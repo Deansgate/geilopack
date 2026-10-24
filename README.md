@@ -1,5 +1,9 @@
 # Klangwerk – lokales Musikstudio
 
+**Smart App Control:** Die bisher veröffentlichten Entwicklungsinstaller sind
+unsigniert und auf SAC-aktivierten Windows-11-Geräten nicht verlässlich startbar.
+Die Schutzfunktion eingeschaltet lassen. [Prüfbericht und sichere nächste Schritte](docs/SMART-APP-CONTROL.md).
+
 [Windows-Downloads](https://github.com/Deansgate/geilopack/releases) · [Buildstatus](https://github.com/Deansgate/geilopack/actions)
 
 Lokale Windows-11-DAW in schrittweiser Entwicklung.
