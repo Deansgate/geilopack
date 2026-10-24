@@ -1,0 +1,56 @@
+name: Installer-Download veröffentlichen
+
+on:
+  workflow_run:
+    workflows: [Windows-Installer]
+    types: [completed]
+    branches: [klangwerk-windows-build]
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  download:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: windows-2022
+    timeout-minutes: 10
+    steps:
+      - name: Geprüften Installer übernehmen und als Entwicklungsfassung anbieten
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          SOURCE_RUN: ${{ github.event.workflow_run.id }}
+          SOURCE_NUMBER: ${{ github.event.workflow_run.run_number }}
+          SOURCE_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+          SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          gh run download $env:SOURCE_RUN --repo $env:REPOSITORY --name Klangwerk-Windows-Setup --dir download
+          if ($LASTEXITCODE -ne 0) { throw 'Das Build-Artefakt konnte nicht geladen werden.' }
+          $report = Get-Content download/Starttest.json -Raw | ConvertFrom-Json
+          if (-not $report.ok) { throw 'Kein erfolgreicher EXE-Starttest vorhanden.' }
+          $expected = (Get-Content download/Setup.exe.sha256 -Raw).Trim()
+          $actual = (Get-FileHash download/Setup.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($expected -ne "$actual  Setup.exe") { throw 'Die Installer-Prüfsumme stimmt nicht.' }
+          $tag = "v0.2.0-dev.$env:SOURCE_NUMBER.$env:SOURCE_ATTEMPT"
+          @"
+          Entwicklungsfassung von Klangwerk 0.2 für Windows 11 x64.
+
+          Unter Assets die Datei Setup.exe herunterladen und starten. Python wird mitgeliefert.
+          Aufnahme, Timeline, lokale CPU-Gesangstrennung und WAV-Export sind enthalten.
+          Das KI-Modell wird nach ausdrücklicher Bestätigung in der Anwendung heruntergeladen.
+
+          Softwaretests und Starttest der gebauten EXE sind durchgelaufen.
+          Physische Audiohardware und Aufnahme-Latenz sind noch nicht abgenommen.
+          Tonhöhenkorrektur, Effekte und Automix fehlen noch. Der Installer ist unsigniert.
+
+          Build: https://github.com/$env:REPOSITORY/actions/runs/$env:SOURCE_RUN
+          "@ | Set-Content -Encoding utf8 release-notes.md
+          gh release create $tag download/Setup.exe download/Setup.exe.sha256 download/Starttest.json `
+            --repo $env:REPOSITORY --target $env:SOURCE_SHA --prerelease `
+            --title 'Klangwerk 0.2 – Windows-Entwicklungsfassung' --notes-file release-notes.md
+          if ($LASTEXITCODE -ne 0) { throw 'Der Download konnte nicht veröffentlicht werden.' }
