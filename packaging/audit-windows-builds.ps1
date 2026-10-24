@@ -1,6 +1,8 @@
 # Prüft ausschließlich die bereits veröffentlichten, hashgeprüften Builds.
 # Keine SAC-/Defender-Ausnahmen, keine Änderung von Schutzrichtlinien.
 $ErrorActionPreference = 'Stop'
+python -c "from PyInstaller.utils.win32.versioninfo import load_version_info_from_text_file; v=load_version_info_from_text_file('packaging/version-info.txt'); assert (v.ffi.fileVersionMS, v.ffi.fileVersionLS) == (2,65536)"
+if ($LASTEXITCODE -ne 0) { throw 'Ungültige Versionsressource.' }
 $root = Join-Path $PWD 'security-audit'
 New-Item -ItemType Directory -Force $root | Out-Null
 $releases = @(
@@ -44,17 +46,31 @@ foreach ($release in $releases) {
 }
 python packaging/compare-build-audit.py $root
 if ($LASTEXITCODE -ne 0) { throw 'Vergleich fehlgeschlagen.' }
+try {
+    & ./packaging/verify-release-trust.ps1 -Roots @((Join-Path $root 'new/installed')) `
+        -Installer (Join-Path $root 'new/Setup.exe') -Report (Join-Path $root 'release-trust.json')
+    throw 'Die Freigabeprüfung hat den unsignierten Build unerwartet akzeptiert.'
+} catch {
+    if ($_.Exception.Message -notlike 'Release blocked:*') { throw }
+}
 $defender = [ordered]@{ completed=$false; detections=@(); limitations='Kein Smart-App-Control-Test auf dem Benutzergerät.' }
 try {
+    try { Update-MpSignature } catch { $defender.signature_update_error = $_.Exception.Message }
     $status = Get-MpComputerStatus
     $defender.engine_version = $status.AMEngineVersion
     $defender.signature_version = $status.AntivirusSignatureVersion
     $defender.antivirus_enabled = $status.AntivirusEnabled
     $defender.started = (Get-Date).ToUniversalTime().ToString('o')
     $started = Get-Date
-    Start-MpScan -ScanType CustomScan -ScanPath $root
+    # Start-MpScan kann vor Ende der Dienst-Prüfung zurückkehren. Die CLI wartet
+    # auf den Custom-Scan; erst danach wird das Ergebnis ausgewertet.
+    $scanner = Join-Path $env:ProgramFiles 'Windows Defender/MpCmdRun.exe'
+    if (-not (Test-Path $scanner)) { throw 'Defender-Scanner nicht verfügbar.' }
+    & $scanner -Scan -ScanType 3 -File $root
+    $defender.exit_code = $LASTEXITCODE
     $defender.detections = @(Get-MpThreatDetection -ErrorAction SilentlyContinue | Where-Object { $_.InitialDetectionTime -ge $started } | Select-Object ThreatID,InitialDetectionTime,ActionSuccess,Resources)
-    $defender.completed = $true
+    $defender.completed = ($LASTEXITCODE -eq 0)
+    $defender.finished = (Get-Date).ToUniversalTime().ToString('o')
 } catch { $defender.error = $_.Exception.Message }
 $defender | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $root 'defender.json')
 Get-Content (Join-Path $root 'comparison-summary.json')

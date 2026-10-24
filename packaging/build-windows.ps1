@@ -31,7 +31,15 @@ Assert-Exit "Lizenzsammlung"
 $QtTranslation = & $Python -c "from PySide6.QtCore import QLibraryInfo; from pathlib import Path; print(Path(QLibraryInfo.path(QLibraryInfo.TranslationsPath)) / 'qtbase_de.qm')"
 Assert-Exit "Qt-Übersetzung suchen"
 if (-not (Test-Path $QtTranslation)) { throw "Die deutsche Qt-Übersetzung fehlt im Build-Paket." }
-& $Python -m PyInstaller --noconfirm --clean --windowed --onedir --name Klangwerk `
+$SavedBuildPath = $env:PATH
+$PythonRoot = & $Python -c "import sys; print(sys.base_prefix)"
+Assert-Exit "Python-Basispfad"
+# Fremde OpenSSL-Versionen aus Java/Oracle/anderen Programmen dürfen nicht
+# abhängig vom zufälligen PATH der Build-Maschine eingesammelt werden.
+$env:PATH = "$PWD\.build-venv\Scripts;$PythonRoot;$PythonRoot\DLLs;$env:SystemRoot\System32;$env:SystemRoot"
+try {
+& $Python -m PyInstaller --noconfirm --clean --windowed --onedir --noupx --name Klangwerk `
+    --version-file packaging/version-info.txt `
     --paths . --collect-all sounddevice --collect-all soundfile `
     --collect-all demucs --collect-all torch --collect-all torchaudio `
     --collect-all dora --collect-all julius --collect-all openunmix `
@@ -41,6 +49,7 @@ if (-not (Test-Path $QtTranslation)) { throw "Die deutsche Qt-Übersetzung fehlt
     --add-data "$QtTranslation;PySide6/translations" `
     --add-data "build/licenses;licenses" packaging/entry.py
 Assert-Exit "PyInstaller"
+} finally { $env:PATH = $SavedBuildPath }
 $Compiler = (Get-Command ISCC.exe -ErrorAction SilentlyContinue).Source
 if (-not $Compiler) { $Compiler = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
 if (-not (Test-Path $Compiler)) {

@@ -31,6 +31,12 @@ jobs:
           $ErrorActionPreference = 'Stop'
           gh run download $env:SOURCE_RUN --repo $env:REPOSITORY --name Klangwerk-Windows-Setup --dir download
           if ($LASTEXITCODE -ne 0) { throw 'Das Build-Artefakt konnte nicht geladen werden.' }
+          if (-not (Test-Path download/Signaturpruefung.json)) { throw 'Release blocked: Signaturprüfung fehlt.' }
+          $trust = Get-Content download/Signaturpruefung.json -Raw | ConvertFrom-Json
+          $setupSignature = Get-AuthenticodeSignature download/Setup.exe
+          if (-not $trust.ok -or $setupSignature.Status -ne 'Valid') {
+            throw 'Release blocked: Installer oder installierte EXE/DLL/PYD-Dateien sind nicht vollständig vertrauenswürdig signiert. Keine erneute Veröffentlichung eines unsignierten Installers.'
+          }
           $report = Get-Content download/Starttest.json -Raw | ConvertFrom-Json
           if (-not $report.ok) { throw 'Kein erfolgreicher EXE-Starttest vorhanden.' }
           $modelReport = Get-Content download/Modelltest.json -Raw | ConvertFrom-Json
@@ -54,7 +60,7 @@ jobs:
 
           Softwaretests, EXE-Starttest sowie echtes Modellladen und CPU-Trennung in der installierten EXE ohne Netzwerk sind durchgelaufen.
           Physische Audiohardware und Aufnahme-Latenz sind noch nicht abgenommen.
-          Tonhöhenkorrektur, Effekte und Automix fehlen noch. Der Installer ist unsigniert.
+          Tonhöhenkorrektur, Effekte und Automix fehlen noch. Eine Signaturprüfung ersetzt keine Prüfung auf einem SAC-aktivierten Zielgerät.
 
           Build: https://github.com/$env:REPOSITORY/actions/runs/$env:SOURCE_RUN
           "@ | Set-Content -Encoding utf8 release-notes.md

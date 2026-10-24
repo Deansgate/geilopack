@@ -108,7 +108,14 @@ jobs:
             throw 'Echtes Modell konnte in der installierten EXE nicht sicher offline verarbeitet werden.'
           }
 
-      - name: Setup.exe zum Download bereitstellen
+      - name: Signaturen von Installer und installierten PE-Dateien erfassen
+        shell: pwsh
+        run: |
+          ./packaging/verify-release-trust.ps1 -Roots @((Join-Path $env:RUNNER_TEMP 'Klangwerk-Installation')) `
+            -Installer (Join-Path $PWD 'dist/installer/Setup.exe') `
+            -Report (Join-Path $PWD 'dist/installer/Signaturpruefung.json') -AuditOnly
+
+      - name: Entwicklungsartefakt bereitstellen (Signaturstatus liegt bei)
         uses: actions/upload-artifact@v4
         with:
           name: Klangwerk-Windows-Setup
@@ -118,5 +125,6 @@ jobs:
             dist/installer/LIESMICH.txt
             dist/installer/Starttest.json
             dist/installer/Modelltest.json
+            dist/installer/Signaturpruefung.json
           if-no-files-found: error
           retention-days: 14
