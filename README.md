@@ -1,5 +1,7 @@
 # Klangwerk – lokales Musikstudio
 
+[Windows-Downloads](https://github.com/Deansgate/geilopack/releases) · [Buildstatus](https://github.com/Deansgate/geilopack/actions)
+
 Lokale Windows-11-DAW in schrittweiser Entwicklung. **Version 0.2 ergänzt echte
 CPU-Gesangstrennung mit Demucs HTDemucs**, Modell-Einrichtung und Prozessabbruch.
 
@@ -54,7 +56,6 @@ Benutzer benötigt dafür keine Kommandozeile. Die Modelle kommen über den Dial
 - [Testbericht](docs/TESTBERICHT.md)
 - [Lokale Gesangstrennung](docs/GESANGSTRENNUNG.md)
 
-![Oberfläche der Basisversion mit synthetischen Testsignalen; 0.2 ergänzt KI-Schaltflächen](docs/oberflaeche.png)
 
 Windows-Build: `packaging/build-windows.ps1` erzeugt mit PyInstaller und Inno
 Setup einen Installer, der kein installiertes Python voraussetzt. Ein getestetes
