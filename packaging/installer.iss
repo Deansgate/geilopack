@@ -31,6 +31,7 @@ Name: "desktopicon"; Description: "Desktop-Verknüpfung erstellen"; GroupDescrip
 [Files]
 Source: "..\dist\Klangwerk\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\docs\BEDIENUNG.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\docs\TESTVERSION-0.3.md"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\Klangwerk"; Filename: "{app}\Klangwerk.exe"

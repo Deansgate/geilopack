@@ -36,7 +36,6 @@ class Engine:
             raise RuntimeError("Bitte zuerst die laufende Wiedergabe beenden.")
         self.project = deepcopy(project)
         self.session = MixSession(self.project)
-        self.end = mix_end(self.project)
         self.position = position
         self.record_start = position
         self.recording = record
@@ -86,7 +85,7 @@ class Engine:
 
     def _output(self, outdata, frames, time, status):
         self._render(outdata, frames, status)
-        if self.position >= self.end:
+        if self.position >= max(self.project.end, mix_end(self.project)):
             raise sd.CallbackStop
 
     def _duplex(self, indata, outdata, frames, time, status):
