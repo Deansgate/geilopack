@@ -53,6 +53,7 @@ jobs:
           if ((Get-Item $setup).Length -lt 1MB) { throw "Setup.exe ist unerwartet klein." }
           $hash = (Get-FileHash $setup -Algorithm SHA256).Hash.ToLowerInvariant()
           "$hash  Setup.exe" | Set-Content -Encoding ascii dist/installer/Setup.exe.sha256
+          Copy-Item docs/TESTVERSION-0.3.md dist/installer/TESTVERSION-0.3.md
           @"
           Klangwerk 0.3.0 – unsignierte Testfassung mit Spureffekten für Windows 11 x64
           Setup.exe starten. Python wird mitgeliefert.
@@ -129,6 +130,6 @@ jobs:
             dist/installer/Starttest.json
             dist/installer/Modelltest.json
             dist/installer/Signaturpruefung.json
-            docs/TESTVERSION-0.3.md
+            dist/installer/TESTVERSION-0.3.md
           if-no-files-found: error
           retention-days: 14
