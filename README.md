@@ -1,3 +1,10 @@
+# Entwicklungsstand 0.3.0
+
+Spureffekte (EQ, Kompression, Hall, Delay) sind als nächste Testfassung ergänzt.
+[Bedienung, Testschritte und verbleibende Sicherheitsbefunde](docs/TESTVERSION-0.3.md).
+Diese Änderungen sind erst nach erfolgreichem Windows-Build als Testartefakt nutzbar.
+Keine neue signierte Veröffentlichung wird behauptet.
+
 # Klangwerk – lokales Musikstudio
 
 **Smart App Control:** Die bisher veröffentlichten Entwicklungsinstaller sind

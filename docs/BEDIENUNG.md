@@ -62,3 +62,13 @@ Die Deinstallation entfernt eigene Projekte und Aufnahmen nicht.
 Lokaler Datenordner unter Windows typischerweise:
 `%LOCALAPPDATA%\KlangwerkLocal\Klangwerk`.
 Die Anwendung enthält keine Upload-, Telemetrie- oder Cloud-Funktion.
+
+## Spureffekte ab 0.3
+
+Im Mixer „Effekte …“ öffnen, Spureffekte einschalten, EQ/Kompression/Hall/Delay
+nach Bedarf einschalten und übernehmen. Danach Wiedergabe starten. Änderungen
+sind bei gestoppter Wiedergabe möglich. Zum Originalvergleich Spureffekte ausschalten
+und erneut abspielen. Die Audiodateien werden nicht verändert.
+Neue Projekte verwenden Format 2 und benötigen mindestens Klangwerk 0.3;
+alte Projekte werden weiter geöffnet. Zunächst unter neuem Namen speichern.
+Details und Testschritte: [TESTVERSION-0.3.md](TESTVERSION-0.3.md).

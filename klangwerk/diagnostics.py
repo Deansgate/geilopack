@@ -40,6 +40,21 @@ def smoke_test(report):
             export_wav(target, project, assets, Event())
             if sf.info(target).frames != 4000:
                 raise RuntimeError("Audioexport hat eine unerwartete Länge.")
+            from klangwerk.effect_settings import Effects
+            from klangwerk.audio.mixer import MixSession, mix_end
+            from klangwerk.ui.effects import EffectsDialog
+            track = project.tracks[0]
+            track.effects = Effects(enabled=True, low_db=-3, compressor=True, reverb=True, delay=True)
+            editor = EffectsDialog(track)
+            if editor.grab().isNull():
+                raise RuntimeError("Effektfenster konnte nicht gezeichnet werden.")
+            editor.close()
+            end = mix_end(project, export=True)
+            expected = MixSession(project).render(project, assets, 0, end, export=True)
+            export_wav(target, project, assets, Event())
+            rendered, _ = sf.read(target, always_2d=True)
+            if len(rendered) != end or not np.allclose(rendered, expected, atol=4e-7):
+                raise RuntimeError("Spureffekte im Export stimmen nicht mit dem Mixer überein.")
             timeline.close()
             # Freigabe vor TemporaryDirectory-Cleanup ist unter Windows erforderlich.
             for audio in assets.data.values():
@@ -48,7 +63,8 @@ def smoke_test(report):
         result = {"ok": True, "numpy": np.__version__, "demucs": demucs.__version__,
                   "torch": torch.__version__, "cuda": torch.version.cuda,
                   "torchaudio": torchaudio.__version__, "checks": [
-                      "Qt-Timeline", "Audioimport", "WAV-Export", "PortAudio-Import", "CPU-KI-Import"],
+                      "Qt-Timeline", "Audioimport", "WAV-Export", "PortAudio-Import", "CPU-KI-Import",
+                      "Effektdialog", "EQ-Kompression-Hall-Delay-Export"],
                   "physical_audio_test": False}
     except Exception:
         result["error"] = traceback.format_exc()

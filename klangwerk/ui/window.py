@@ -7,7 +7,7 @@ from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QFileDialog, QMessageBox, QScrollArea, QTableWidget, QTableWidgetItem,
-    QSlider, QCheckBox, QComboBox, QProgressBar, QSplitter, QAbstractItemView,
+    QSlider, QCheckBox, QComboBox, QProgressBar, QSplitter, QAbstractItemView, QDialog,
 )
 
 from klangwerk.model import Project, Clip, Track, History, RATE, split_clip
@@ -20,6 +20,7 @@ from klangwerk.ui.jobs import Job
 from klangwerk.ui.timeline import Timeline
 from klangwerk.ai.models import MODEL_FILE, download_model
 from klangwerk.ai.separation import runtime_available, separate_clip
+from klangwerk.ui.effects import EffectsDialog
 
 
 class Window(QMainWindow):
@@ -37,7 +38,7 @@ class Window(QMainWindow):
         self.clipboard = None
         self._take_start = 0
         self._rebuild = False
-        self.setWindowTitle("Klangwerk · Lokales Musikstudio 0.2.1")
+        self.setWindowTitle("Klangwerk · Lokales Musikstudio 0.3.0")
         self.resize(1280, 850)
         self._build()
         self._menus()
@@ -93,8 +94,8 @@ class Window(QMainWindow):
         scroll = QScrollArea()
         scroll.setWidget(self.timeline)
         splitter.addWidget(scroll)
-        self.mixer = QTableWidget(0, 7)
-        self.mixer.setHorizontalHeaderLabels(["Spur", "Lautstärke", "Panorama", "Stumm", "Solo", "Referenz¹", "Spur wählen"])
+        self.mixer = QTableWidget(0, 8)
+        self.mixer.setHorizontalHeaderLabels(["Spur", "Lautstärke", "Panorama", "Stumm", "Solo", "Referenz¹", "Spur wählen", "Effekte"])
         self.mixer.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.mixer.verticalHeader().hide()
         self.mixer.horizontalHeader().setStretchLastSection(True)
@@ -165,6 +166,7 @@ class Window(QMainWindow):
         self.action(edit, "Gewählten Clip löschen", self.delete, "Delete")
         self.action(edit, "Gewählte Spur löschen", self.delete_track)
         self.action(edit, "Bereichsmarkierung aufheben", self.clear_range, "Escape")
+        self.action(edit, "Effekte der gewählten Spur …", self.edit_effects)
         ai = self.menuBar().addMenu("KI-Produzent")
         self.action(ai, "Modell einrichten …", self.setup_ai)
         self.action(ai, "Gewählten Clip in Gesang und Instrumental trennen", self.separate)
@@ -206,12 +208,15 @@ class Window(QMainWindow):
             button = QPushButton("Auswählen")
             button.clicked.connect(lambda checked=False, t=track: self.select(t.id, t.clips[0].id if t.clips else ""))
             self.mixer.setCellWidget(row, 6, button)
+            effect_button = QPushButton("Effekte an …" if track.effects.enabled else "Effekte aus …")
+            effect_button.clicked.connect(lambda checked=False, t=track: self.edit_effects(track=t))
+            self.mixer.setCellWidget(row, 7, effect_button)
         self.mixer.setColumnWidth(0, 210)
         self.mixer.setColumnWidth(1, 190)
         self.mixer.setColumnWidth(2, 150)
         self.master.setValue(round(self.project.master * 100))
         self._rebuild = False
-        self.setWindowTitle(f"{'* ' if self.dirty else ''}{self.project.name} · Klangwerk 0.2.1")
+        self.setWindowTitle(f"{'* ' if self.dirty else ''}{self.project.name} · Klangwerk 0.3.0")
 
     def set_track(self, track, field, value, slider):
         self.checkpoint()
@@ -220,6 +225,20 @@ class Window(QMainWindow):
         self.dirty = True
         if self.engine.stream is not None:
             self.engine.project = deepcopy(self.project)
+
+    def edit_effects(self, checked=False, *, track=None):
+        if not self.idle():
+            return
+        track = track or self.chosen()[0]
+        if track is None:
+            self.error("Bitte zuerst eine Spur auswählen.")
+            return
+        dialog = EffectsDialog(track, self)
+        if dialog.exec() == QDialog.Accepted and dialog.settings != track.effects:
+            self.checkpoint()
+            track.effects = dialog.settings
+            self.refresh()
+            self.statusBar().showMessage("Spureffekte übernommen. Wiedergabe starten; zum Originalvergleich Spureffekte ausschalten.")
 
     def toggle_track(self, track, field, value):
         self.checkpoint()
@@ -585,7 +604,7 @@ class Window(QMainWindow):
     def export(self, checked=False, region=False, single=False):
         if not self.idle():
             return
-        start, end = 0, self.project.end
+        start, end = 0, None
         track_id = None
         if region:
             if not self.timeline.region or self.timeline.region[0] == self.timeline.region[1]:
@@ -612,7 +631,7 @@ class Window(QMainWindow):
                      lambda gain: self.statusBar().showMessage(f"Export fertig. Pegel zur Clipping-Vermeidung: {gain * 100:.1f}%. Referenzspuren ausgeschlossen."))
 
     def help(self):
-        QMessageBox.information(self, "Bedienung / Version 0.2.1", "Audio importieren → Mikrofon/Ausgabe wählen → Kopfhörer aufsetzen → Aufnahme.\n"
+        QMessageBox.information(self, "Bedienung / Version 0.3.0", "Audio importieren → Mikrofon/Ausgabe wählen → Kopfhörer aufsetzen → Aufnahme.\n"
             "Stoppen sichert jeden Take auf einer neuen Spur. Kein Mikrofon-Monitoring.\n\n"
             "Lineal anklicken: Position · Clip ziehen: verschieben · S: teilen\n"
             "Strg+C / Strg+V: Clip kopieren/einfügen · Entf: Clip löschen\n"
@@ -621,7 +640,9 @@ class Window(QMainWindow):
             "Projektdatei und gleichnamigen .audio-Ordner zusammen aufbewahren.\n"
             "Alle 2 Minuten wird im Leerlauf eine automatische Sicherung erstellt.\n\n"
             "Gesangstrennung: Modell einmal einrichten, Song-Clip wählen und Trennung starten. Original bleibt erhalten.\n"
-            "Geplant: Korrekturen, EQ/Kompression/Hall/Delay, MP3-Export, Aufnahme-Latenzkalibrierung.\n"
+            "Mixer → Effekte: EQ, Kompression, Hall und Delay für die gesamte Spur. Änderungen bei gestoppter Wiedergabe.\n"
+            "WAV enthält Effekte und Ausklänge; Bereichsexport endet exakt an der Bereichsgrenze.\n"
+            "Geplant: Tonhöhen-/Timingkorrekturen, Vorlagenanpassung, automatisches Mixing, MP3-Export, Aufnahme-Latenzkalibrierung.\n"
             "Aufnahme kann durch Gerätelatenz versetzt sein: Take bei Bedarf verschieben.\n"
             "Echte Windows-/Mikrofontests sind vor produktivem Einsatz erforderlich.")
 

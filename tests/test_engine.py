@@ -25,7 +25,9 @@ def test_recording_contains_microphone_only_and_starts_at_cursor(tmp_path, monke
     path = tmp_path / "instrumental.wav"
     sf.write(path, np.ones((3000, 2), dtype="float32") * .6, RATE, subtype="FLOAT")
     key = assets.import_file(str(path), Event())
-    project = Project(master=1, tracks=[Track("Instrumental", [Clip(key, 0, 0, 3000)])])
+    from klangwerk.effect_settings import Effects
+    project = Project(master=1, tracks=[Track("Instrumental", [Clip(key, 0, 0, 3000)],
+        effects=Effects(enabled=True, eq=False, delay=True, delay_mix=.5))])
     engine = Engine(assets)
     engine.start(project, 500, record=True)
     microphone = np.ones((1024, 1), dtype="float32") * .1
@@ -37,7 +39,7 @@ def test_recording_contains_microphone_only_and_starts_at_cursor(tmp_path, monke
     assert engine.record_start == 500
     assert engine.position == 1524
     np.testing.assert_allclose(data, microphone)
-    np.testing.assert_allclose(output, .6)
+    np.testing.assert_allclose(output, .3)  # Trockener Anteil; Echo folgt später.
     assert not engine.recording
 
 

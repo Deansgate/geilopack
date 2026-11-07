@@ -14,12 +14,14 @@ if (-not (Test-Path ".build-venv\Scripts\python.exe")) {
 $Python = Join-Path $PWD ".build-venv\Scripts\python.exe"
 & $Python -m pip install --requirement packaging/requirements-windows.txt
 Assert-Exit "Abhängigkeiten"
-& $Python -m pip install "torch==2.6.0+cpu" "torchaudio==2.6.0+cpu" --index-url https://download.pytorch.org/whl/cpu
+& $Python -m pip install "torch==2.11.0+cpu" "torchaudio==2.11.0+cpu" --index-url https://download.pytorch.org/whl/cpu
 Assert-Exit "CPU-KI-Laufzeit"
 & $Python -m pip install --requirement packaging/requirements-ai.txt
 Assert-Exit "Demucs-Abhängigkeiten"
 & $Python -m pip install --no-deps --no-build-isolation -e .
 Assert-Exit "Klangwerk installieren"
+& $Python -m pip check
+Assert-Exit "Abhängigkeitskonsistenz"
 $env:QT_QPA_PLATFORM = "offscreen"
 $env:KLANGWERK_TEST_MODEL = & $Python -c "from pathlib import Path; from threading import Event; from klangwerk.ai.models import download_model; print(download_model(Path('.build-models').resolve(), Event()))"
 Assert-Exit "Geprüftes HTDemucs-Testmodell"
@@ -39,6 +41,7 @@ Assert-Exit "Python-Basispfad"
 $env:PATH = "$PWD\.build-venv\Scripts;$PythonRoot;$PythonRoot\DLLs;$env:SystemRoot\System32;$env:SystemRoot"
 try {
 & $Python -m PyInstaller --noconfirm --clean --windowed --onedir --noupx --name Klangwerk `
+    --exclude-module pip --exclude-module pytest --exclude-module setuptools `
     --version-file packaging/version-info.txt `
     --paths . --collect-all sounddevice --collect-all soundfile `
     --collect-all demucs --collect-all torch --collect-all torchaudio `

@@ -1,5 +1,5 @@
 #define AppName "Klangwerk"
-#define AppVersion "0.2.1"
+#define AppVersion "0.3.0"
 
 [Setup]
 AppId={{BDCE680C-B409-4EAE-A729-91ECD889DA23}

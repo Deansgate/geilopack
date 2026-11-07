@@ -8,7 +8,7 @@ import numpy as np
 import sounddevice as sd
 import soundfile as sf
 
-from klangwerk.audio.mixer import mix_block
+from klangwerk.audio.mixer import MixSession, mix_end
 from klangwerk.model import RATE, uid
 
 
@@ -35,6 +35,8 @@ class Engine:
         if self.stream is not None:
             raise RuntimeError("Bitte zuerst die laufende Wiedergabe beenden.")
         self.project = deepcopy(project)
+        self.session = MixSession(self.project)
+        self.end = mix_end(self.project)
         self.position = position
         self.record_start = position
         self.recording = record
@@ -76,7 +78,7 @@ class Engine:
     def _render(self, outdata, frames, status):
         if status:
             self.warning = "Audioaussetzer erkannt. Größeren Geräte-Puffer verwenden oder andere Programme schließen."
-        outdata[:] = mix_block(self.project, self.assets, self.position, frames)
+        outdata[:] = self.session.render(self.project, self.assets, self.position, frames)
         if np.max(np.abs(outdata), initial=0) > 1:
             self.overload = True
         np.clip(outdata, -1, 1, out=outdata)  # Geräteschutz; Übersteuerung wird angezeigt.
@@ -84,7 +86,7 @@ class Engine:
 
     def _output(self, outdata, frames, time, status):
         self._render(outdata, frames, status)
-        if self.position >= self.project.end:
+        if self.position >= self.end:
             raise sd.CallbackStop
 
     def _duplex(self, indata, outdata, frames, time, status):

@@ -3,7 +3,7 @@ name: Windows-Installer
 on:
   workflow_dispatch:
   push:
-    branches: [klangwerk-windows-build]
+    branches: [klangwerk-windows-build, klangwerk-effects-test]
 
 permissions:
   contents: read
@@ -54,10 +54,13 @@ jobs:
           $hash = (Get-FileHash $setup -Algorithm SHA256).Hash.ToLowerInvariant()
           "$hash  Setup.exe" | Set-Content -Encoding ascii dist/installer/Setup.exe.sha256
           @"
-          Klangwerk 0.2.1 – korrigierte Entwicklungsfassung für Windows 11 x64
+          Klangwerk 0.3.0 – unsignierte Testfassung mit Spureffekten für Windows 11 x64
           Setup.exe starten. Python wird mitgeliefert.
           Die Einrichtung des KI-Modells erfolgt anschließend in der Anwendung.
           Physische Audiohardware und Aufnahme-Latenz sind noch nicht abgenommen.
+          Smart App Control kann diese neue Testfassung blockieren; Schutzfunktionen eingeschaltet lassen.
+          Projektformat 2: alte Projekte öffnen, zunächst unter neuem Namen speichern.
+          Bekannte verbleibende Abhängigkeitsbefunde: siehe docs/TESTVERSION-0.3.md.
           "@ | Set-Content -Encoding utf8 dist/installer/LIESMICH.txt
 
       - name: Gebaute EXE ohne Python-Umgebung starten und prüfen
@@ -126,5 +129,6 @@ jobs:
             dist/installer/Starttest.json
             dist/installer/Modelltest.json
             dist/installer/Signaturpruefung.json
+            docs/TESTVERSION-0.3.md
           if-no-files-found: error
           retention-days: 14

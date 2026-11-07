@@ -44,7 +44,7 @@ def save_project(path: Path, project: Project, assets, cancel, progress=lambda p
                 temporary.unlink(missing_ok=True)
         mappings[asset_id] = f"{media.name}/{target.name}"
         progress(int((index + 1) / max(1, len(asset_ids)) * 95))
-    document = {"format": "klangwerk", "version": 1, "project": project.to_dict(), "assets": mappings}
+    document = {"format": "klangwerk", "version": 2, "project": project.to_dict(), "assets": mappings}
     from klangwerk.audio.assets import Cancelled
     if cancel.is_set():
         raise Cancelled()
@@ -58,7 +58,7 @@ def load_project(path: Path, assets, cancel, progress=lambda p: None):
     path = Path(path)
     with path.open(encoding="utf-8") as file:
         document = json.load(file)
-    if document.get("format") != "klangwerk" or document.get("version") != 1:
+    if document.get("format") != "klangwerk" or document.get("version") not in (1, 2):
         raise ValueError("Unbekanntes Projektformat oder nicht unterstützte Version.")
     project = Project.from_dict(document["project"])
     # Erst alle Assets prüfen, dann den gemeinsamen Cache verändern.

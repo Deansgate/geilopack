@@ -107,3 +107,36 @@ def test_ui_background_import_save_and_reopen(tmp_path, monkeypatch):
     assert window.project.tracks[0].name == "Gesang"
     assert not window.grab().isNull()
     window.close()
+
+
+def test_effect_dialog_apply_undo_save_and_cancel(tmp_path, monkeypatch):
+    from klangwerk.ui.effects import EffectsDialog
+    from PySide6.QtWidgets import QDialog
+    app = QApplication.instance() or QApplication([])
+    monkeypatch.setattr(Window, "first_start", lambda self: None)
+    monkeypatch.setattr(Window, "scan_devices", lambda self: None)
+    window = Window(tmp_path / 'data')
+    track = Track('Gesang')
+    window.project.tracks.append(track)
+    window.select(track.id, '')
+    dialog = EffectsDialog(track, window)
+    dialog.enabled.setChecked(True)
+    dialog.controls['low_db'].setValue(-3)
+    dialog.controls['reverb'].setChecked(True)
+    dialog.accept()
+    assert not track.effects.enabled  # Dialog verändert das Modell nicht vor Übernahme.
+    monkeypatch.setattr(EffectsDialog, 'exec', lambda self: QDialog.Accepted)
+    monkeypatch.setattr('klangwerk.ui.window.EffectsDialog', lambda *a: dialog)
+    window.edit_effects()
+    assert track.effects.enabled and track.effects.low_db == -3
+    window.undo()
+    assert not window.project.tracks[0].effects.enabled
+    window.redo()
+    assert window.project.tracks[0].effects.reverb
+    before = window.project.to_dict()
+    dialog.settings.low_db = 7
+    monkeypatch.setattr(EffectsDialog, 'exec', lambda self: QDialog.Rejected)
+    window.edit_effects()
+    assert window.project.to_dict() == before
+    window.dirty = False
+    window.close()

@@ -4,6 +4,7 @@ from dataclasses import asdict, dataclass, field
 from copy import deepcopy
 import math
 from uuid import uuid4
+from klangwerk.effect_settings import Effects
 
 RATE = 48000
 
@@ -35,6 +36,7 @@ class Track:
     solo: bool = False
     reference: bool = False
     id: str = field(default_factory=uid)
+    effects: Effects = field(default_factory=Effects)
 
 
 @dataclass
@@ -58,11 +60,12 @@ class Project:
         tracks = []
         for row in data["tracks"]:
             row = dict(row)
+            effects = Effects(**row.pop("effects", {})).validate()
             clips = [Clip(**c) for c in row.pop("clips")]
             for c in clips:
                 if any(type(n) is not int for n in (c.start, c.offset, c.length)) or min(c.start, c.offset) < 0 or c.length <= 0:
                     raise ValueError("Ungültige Clip-Position im Projekt.")
-            track = Track(clips=clips, **row)
+            track = Track(clips=clips, effects=effects, **row)
             if not math.isfinite(track.gain) or not 0 <= track.gain <= 4:
                 raise ValueError("Ungültige Spurlautstärke.")
             if not math.isfinite(track.pan) or not -1 <= track.pan <= 1:
